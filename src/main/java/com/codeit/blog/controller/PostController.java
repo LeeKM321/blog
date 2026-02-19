@@ -13,6 +13,10 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 @RestController
 @RequestMapping("/api/posts")
@@ -112,6 +116,56 @@ public class PostController {
         postService.delete(id);
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/test-cache-stampede/{id}")
+    public ResponseEntity<Map<String, Object>> testCacheStampede(
+            @PathVariable Long id,
+            @RequestParam(defaultValue = "100") int threadCount
+    ) throws InterruptedException {
+        log.info("========================================");
+        log.info("Cache Stampede 테스트 시작: id={}, threadCount={}", id, threadCount);
+        log.info("========================================");
+
+        ExecutorService executor = Executors.newFixedThreadPool(threadCount);
+        CountDownLatch latch = new CountDownLatch(threadCount);
+
+        long startTime = System.currentTimeMillis();
+
+        // 동시 요청 시작
+        for (int i = 0; i < threadCount; i++) {
+            final int requestNum = i + 1;
+            executor.submit(() -> {
+                try {
+                    latch.countDown(); // 모든 스레드가 준비될 때까지 대기
+                    latch.await();     // 동시 시작!
+
+                    postService.findByIdWithLoadingCache(id);
+                    log.debug("요청 {} 완료", requestNum);
+                } catch (Exception e) {
+                    log.error("요청 {} 실패", requestNum, e);
+                }
+            });
+        }
+
+        executor.shutdown();
+        executor.awaitTermination(30, TimeUnit.SECONDS);
+
+        long duration = System.currentTimeMillis() - startTime;
+
+        log.info("========================================");
+        log.info("Cache Stampede 테스트 완료!");
+        log.info("- 총 요청 수: {}", threadCount);
+        log.info("- 소요 시간: {}ms", duration);
+        log.info("========================================");
+
+        return ResponseEntity.ok(Map.of(
+                "message", "Cache Stampede 테스트 완료",
+                "id", id,
+                "threadCount", threadCount,
+                "duration", duration + "ms"
+        ));
+    }
+
 
 
 }

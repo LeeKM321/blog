@@ -2,6 +2,7 @@ package com.codeit.blog.config;
 
 import com.codeit.blog.entity.Post;
 import com.codeit.blog.repository.PostRepository;
+import com.codeit.blog.service.PostService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationArguments;
@@ -24,11 +25,19 @@ import java.util.Random;
 public class DataInitializer implements ApplicationRunner {
 
     private final PostRepository postRepository;
+    private final PostService postService;
     private final Random random = new Random();
 
     @Override
     @Transactional
     public void run(ApplicationArguments args) {
+
+        // 캐시 워머 전략: 서버 시작 시 미리 캐시를 채우는 전략
+//        List<Post> popularPost = postRepository.findTop10ByOrderByViewCountDesc();
+//        popularPost.forEach(post -> {
+//            postService.findById(post.getId()); // 캐시에 저장됨
+//        });
+
         if (postRepository.count() > 0) {
             log.info("초기 데이터가 이미 존재합니다. 스킵합니다.");
             return;

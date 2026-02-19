@@ -3,6 +3,7 @@ package com.codeit.blog.service;
 import com.codeit.blog.dto.PostRequest;
 import com.codeit.blog.entity.Post;
 import com.codeit.blog.repository.PostRepository;
+import com.github.benmanes.caffeine.cache.LoadingCache;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
@@ -20,6 +21,7 @@ import java.util.List;
 public class PostService {
 
     private final PostRepository postRepository;
+    private final LoadingCache<Long, Post> postLoadingCache;
 
     /**
      * 게시글 단건 조회
@@ -138,6 +140,15 @@ public class PostService {
     public void incrementLikeCount(Long id) {
         Post post = findById(id);
         post.incrementLikeCount();
+    }
+
+    public Post findByIdWithLoadingCache(Long id) {
+        try {
+            return postLoadingCache.get(id);
+        } catch (Exception e) {
+            log.error("LoadingCache 조회 실패: id={}", id, e);
+            throw new RuntimeException("게시글 조회 실패", e);
+        }
     }
 
     /**
