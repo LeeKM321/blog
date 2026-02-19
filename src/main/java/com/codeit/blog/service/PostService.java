@@ -1,9 +1,11 @@
 package com.codeit.blog.service;
 
+import com.codeit.blog.dto.PostRequest;
 import com.codeit.blog.entity.Post;
 import com.codeit.blog.repository.PostRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,6 +22,7 @@ public class PostService {
     /**
      * 게시글 단건 조회
      */
+    @Cacheable(value = "posts", key = "#id")
     public Post findById(Long id) {
         log.debug("DB에서 게시글 조회: id={}", id);
         simulateSlowQuery();
@@ -30,6 +33,7 @@ public class PostService {
     /**
      * 카테고리별 게시글 조회
      */
+    @Cacheable(value = "postsByCategory", key = "#category")
     public List<Post> findByCategory(String category) {
         log.debug("DB에서 카테고리별 게시글 조회: category={}", category);
         simulateSlowQuery();
@@ -38,7 +42,9 @@ public class PostService {
 
     /**
      * 인기 게시글 조회 (조회수 기준)
+     * 인기 게시글 목록은 모든 사용자에게 동일하니까 하나만 캐시하면 됩니다.
      */
+    @Cacheable(value = "popularPosts") //key를 따로 지정하지 않는다면 자동으로 'SimpleKey.EMPTY' 값으로 키를 자동 세팅합니다.
     public List<Post> findPopularPosts() {
         log.debug("DB에서 인기 게시글 조회");
         simulateSlowQuery();
