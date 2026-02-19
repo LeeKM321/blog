@@ -1,15 +1,15 @@
 package com.codeit.blog.controller;
 
+import com.codeit.blog.dto.PostRequest;
 import com.codeit.blog.dto.PostResponse;
 import com.codeit.blog.entity.Post;
 import com.codeit.blog.service.PostService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
@@ -82,6 +82,37 @@ public class PostController {
                 "fromCache", fromCache
         ));
     }
+
+    /**
+     * 게시글 수정
+     *
+     * @return
+     */
+    @PutMapping("/{id}")
+    public ResponseEntity<PostResponse> updatePost(@PathVariable Long id,
+                                                   @Valid @RequestBody PostRequest postRequest) {
+        Post post = postService.update(id, postRequest);
+        return ResponseEntity.ok(PostResponse.from(post));
+    }
+
+    /**
+     * 게시글 생성
+     *
+     * @return
+     */
+    @PostMapping
+    public ResponseEntity<PostResponse> createPost(@Valid @RequestBody PostRequest postRequest) {
+        Post post = postService.create(postRequest);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(PostResponse.from(post));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deletePost(@PathVariable Long id) {
+        postService.delete(id);
+        return ResponseEntity.noContent().build();
+    }
+
 
 }
 
