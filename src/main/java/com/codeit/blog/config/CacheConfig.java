@@ -45,7 +45,6 @@ public class CacheConfig {
                 Caffeine.newBuilder()
                         .maximumSize(100)
                         .expireAfterWrite(Duration.ofMinutes((long) (3 + (Math.random()*3))))
-                        .refreshAfterWrite(Duration.ofMinutes(2))
                         .recordStats()
                         .build()
         );
@@ -66,6 +65,7 @@ public class CacheConfig {
         return Caffeine.newBuilder()
                 .maximumSize(1000)
                 .expireAfterWrite(Duration.ofMinutes(10))
+                .refreshAfterWrite(Duration.ofMinutes(2)) // 캐시 미리 갱신하는 로직 (LoadingCache와 함께 작성)
                 .recordStats()
                 // build() 안에 로딩 로직을 정의.
                 // 캐시 미스 시 자동으로 이 로직이 실행되고, 동시 요청은 첫번째만 실행되고 나머지는 기다립니다.

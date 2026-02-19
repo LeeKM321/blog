@@ -24,6 +24,23 @@ spring:
         highlight_sql: true
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
+# Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,caches
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+    caches:
+      access: unrestricted
+  metrics:
+    tags:
+      application: ${spring.application.name}
+
+
 # Logging
 logging:
   level:
